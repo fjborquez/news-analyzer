@@ -1,9 +1,8 @@
-from spacy import load
-from pandas import read_csv
+import spacy
 
 
 def analyze(text):
-    nlp = load('en_core_web_sm')
+    nlp = spacy.load("custom-stock-pipeline.spacy")
     doc = nlp(text)
     organizations = get_organization(doc.ents)
 
@@ -14,22 +13,8 @@ def get_organization(ents):
     organizations = []
 
     for entity in ents:
-        if entity.label_ == 'ORG' and white_lists_validations(entity.text):
+        if entity.label_ == 'COMPANY_SHORTNAME' or entity.label_ == 'COMPANY_NAME':
             organizations.append(entity.text)
 
     return list(set(organizations))
 
-
-def white_lists_validations(text):
-    return csv_validations(text, 'tickers') or csv_validations(text, 'names') \
-           or csv_validations(text, 'shortnames')
-
-
-def csv_validations(text, validation):
-    tickers = get_dataset(validation)
-    return tickers.count(text) > 0
-
-
-def get_dataset(name):
-    dataset = read_csv('./datasets/' + name + '.csv')
-    return dataset['KEYWORD'].tolist()
